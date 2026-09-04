@@ -1,3 +1,8 @@
+/*
+    Compilação: "gcc main.c preprocessador.c -o main.exe"
+    Execução: "./main.exe teste.asm teste.pre"
+*/
+
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
