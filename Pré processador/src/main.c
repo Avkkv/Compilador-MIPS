@@ -1,12 +1,12 @@
 /*
     Compilação: "gcc main.c preprocessador.c -o main.exe"
-    Execução: "./main.exe teste.asm teste.pre"
+    Execução: "./main.exe teste.asm teste.asm"
 */
 
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include"preprocessador.h"
+#include"../includes/preprocessador.h"
 
 int main(int argc, char *argv[]) {
 
