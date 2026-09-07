@@ -3,6 +3,7 @@
 .data
 
 msg:    .asciiz "Resultado # obtido"    # mensagem
+"wwfdffhvf#dddddddd
 
 .text
 main:
