@@ -4,14 +4,12 @@
 
 #include "../includes/preprocessador.h"
 
-
 int executar_teste(const char *nome,
                    const char *entrada,
                    const char *esperado)
 {
     FILE *arquivo_entrada;
     FILE *arquivo_saida;
-
     char resultado[2048];
 
     arquivo_entrada = tmpfile();
@@ -23,11 +21,9 @@ int executar_teste(const char *nome,
     }
 
     fputs(entrada, arquivo_entrada);
-
     rewind(arquivo_entrada);
 
     preprocessar(arquivo_entrada, arquivo_saida);
-
     rewind(arquivo_saida);
 
     memset(resultado, 0, sizeof(resultado));
@@ -69,6 +65,7 @@ int executar_teste(const char *nome,
 }
 
 
+/* Teste 1: remocao de comentarios */
 int teste_comentarios()
 {
     const char *entrada =
@@ -88,6 +85,7 @@ int teste_comentarios()
 }
 
 
+/* Teste 2: preservacao de # dentro de strings */
 int teste_string_com_hash()
 {
     const char *entrada =
@@ -106,6 +104,7 @@ int teste_string_com_hash()
 }
 
 
+/* Teste 3: normalizacao de espacos e tabulacoes */
 int teste_espacos()
 {
     const char *entrada =
@@ -126,6 +125,7 @@ int teste_espacos()
 }
 
 
+/* Teste 4: remocao de linhas vazias */
 int teste_linhas_vazias()
 {
     const char *entrada =
@@ -148,6 +148,36 @@ int teste_linhas_vazias()
 }
 
 
+/*
+ * Teste 5:
+ * verifica se uma linha com mais de TAM_LINHA caracteres
+ * consegue ser preservada corretamente.
+ */
+int teste_linha_longa()
+{
+    char entrada[1200];
+    char esperado[1200];
+
+    for (int i = 0; i < 1100; i++) {
+        entrada[i] = 'A';
+        esperado[i] = 'A';
+    }
+
+    entrada[1100] = '\n';
+    entrada[1101] = '\0';
+
+    esperado[1100] = '\n';
+    esperado[1101] = '\0';
+
+    return executar_teste(
+        "Preservacao de linha longa",
+        entrada,
+        esperado
+    );
+}
+
+
+/* Programa principal dos testes */
 int main()
 {
     int total = 0;
@@ -157,36 +187,50 @@ int main()
     printf(" TESTES DO PRE-PROCESSADOR\n");
     printf("========================================\n\n");
 
+
     total++;
     if (teste_comentarios()) {
         aprovados++;
     }
+
 
     total++;
     if (teste_string_com_hash()) {
         aprovados++;
     }
 
+
     total++;
     if (teste_espacos()) {
         aprovados++;
     }
+
 
     total++;
     if (teste_linhas_vazias()) {
         aprovados++;
     }
 
+
+    total++;
+    if (teste_linha_longa()) {
+        aprovados++;
+    }
+
+
     printf("\n========================================\n");
     printf("Resultado: %d de %d testes passaram.\n",
            aprovados, total);
     printf("========================================\n");
+
 
     if (aprovados == total) {
         printf("TODOS OS TESTES PASSARAM!\n");
         return 0;
     }
 
+
     printf("ALGUNS TESTES FALHARAM!\n");
+
     return 1;
 }
