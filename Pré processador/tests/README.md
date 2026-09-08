@@ -9,7 +9,8 @@ Os testes verificam:
 - Remoção de comentários;
 - Preservação do caractere `#` dentro de strings;
 - Normalização de espaços e tabulações;
-- Remoção de linhas vazias e comentários isolados.
+- Remoção de linhas vazias e comentários isolados;
+- Comportamento do pré-processador com linhas maiores que `TAM_LINHA`.
 
 ## Como executar
 
@@ -25,9 +26,21 @@ No Windows PowerShell:
 
 .\tests\test_preprocessador.exe
 
+Caso de teste de linha longa
+Foi adicionado um teste para verificar o comportamento do pré-processador ao receber uma linha maior que TAM_LINHA.
+
+Atualmente, esse teste não passa, pois uma linha muito longa é dividida em múltiplos trechos durante a leitura.
+
+Esse teste foi incluído para identificar e documentar essa limitação da implementação atual.
+
 Resultado esperado
-Os testes devem apresentar [PASSOU] quando forem executados corretamente.
+Os testes básicos devem apresentar [PASSOU] quando executados corretamente.
 
-Ao final, deve aparecer:
+Atualmente, o teste de linha longa apresenta [FALHOU], pois identifica uma limitação da implementação atual do pré-processador.
 
-TODOS OS TESTES PASSARAM!
+O resultado atual esperado é:
+
+Resultado: 4 de 5 testes passaram.
+ALGUNS TESTES FALHARAM!
+
+A falha do teste de linha longa é intencional e serve para documentar esse caso de borda.
