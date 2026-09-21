@@ -1,29 +1,52 @@
 /*
-    Compilação: "gcc main.c preprocessador.c -o main.exe"
-    Execução: "./main.exe teste.asm teste.asm"
+    Compilacao a partir da raiz do projeto:
+    gcc -std=c99 -Wall -Wextra -pedantic
+        "Pre processador/src/main.c"
+        "Pre processador/src/preprocessador.c"
+        "Analise lexica/lexico.c" -o main
+
+    Execucao:
+    ./main entrada.asm saida.pre saida.lex
 */
 
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 #include"../includes/preprocessador.h"
+#include"../../Analise lexica/lexico.h"
+
+static int nome_relatorio(const char *nome_lex, const char *extensao,
+                          char *destino, size_t tamanho)
+{
+    /* .ts e .err usam o mesmo nome-base informado para o arquivo .lex. */
+    const char *ponto = strrchr(nome_lex, '.');
+    size_t base = ponto == NULL ? strlen(nome_lex) : (size_t)(ponto - nome_lex);
+    if (base + strlen(extensao) + 1 > tamanho) return 0;
+    memcpy(destino, nome_lex, base);
+    destino[base] = '\0';
+    return snprintf(destino + base, tamanho - base, "%s", extensao) >= 0;
+}
 
 int main(int argc, char *argv[]) {
 
     FILE * arquivo_entrada;
     FILE * arquivo_saida;
+    FILE * arquivo_lex;
+    FILE * arquivo_ts;
+    FILE * arquivo_err;
+    char nome_ts[1024];
+    char nome_err[1024];
 
-    /* Verifica se foram informados exatamente dois argumentos */
-    if (argc != 3) {
+    if (argc != 4) {
 
         fprintf(stderr,
-                "Uso: %s <arquivo_entrada.asm> <arquivo_saida.pre>\n",
+                "Uso: %s <entrada.asm> <saida.pre> <saida.lex>\n",
                 argv[0]);
 
         return 1;
     }
 
-    /* Abre o arquivo de entrada para leitura */
+    /* A entrada e o Assembly original, ainda com comentarios e espacos. */
     arquivo_entrada = fopen(argv[1], "r");
 
     if (arquivo_entrada == NULL) {
@@ -35,7 +58,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* Abre o arquivo de saida para escrita */
+    /* Este arquivo recebe o texto normalizado pelo pre-processador. */
     arquivo_saida = fopen(argv[2], "w");
 
     if (arquivo_saida == NULL) {
@@ -49,12 +72,46 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* Executa o pre-processamento */
+    /* Primeira etapa: remove comentarios e normaliza espacos. */
     preprocessar(arquivo_entrada, arquivo_saida);
 
     /* Fecha os arquivos */
     fclose(arquivo_entrada);
     fclose(arquivo_saida);
+
+    /* Segunda etapa: reabre o arquivo normalizado para a analise lexica. */
+    arquivo_saida = fopen(argv[2], "r");
+    arquivo_lex = fopen(argv[3], "w");
+    if (arquivo_saida == NULL || arquivo_lex == NULL ||
+        !nome_relatorio(argv[3], ".ts", nome_ts, sizeof(nome_ts)) ||
+        !nome_relatorio(argv[3], ".err", nome_err, sizeof(nome_err))) {
+        fprintf(stderr, "Erro: nao foi possivel preparar as saidas lexicais.\n");
+        if (arquivo_saida != NULL) fclose(arquivo_saida);
+        if (arquivo_lex != NULL) fclose(arquivo_lex);
+        return 1;
+    }
+
+    arquivo_ts = fopen(nome_ts, "w");
+    arquivo_err = fopen(nome_err, "w");
+    if (arquivo_ts == NULL || arquivo_err == NULL) {
+        fprintf(stderr, "Erro: nao foi possivel criar os relatorios lexicais.\n");
+        fclose(arquivo_saida);
+        fclose(arquivo_lex);
+        if (arquivo_ts != NULL) fclose(arquivo_ts);
+        if (arquivo_err != NULL) fclose(arquivo_err);
+        return 1;
+    }
+
+    /* A analise escreve tokens, tabela de simbolos e erros separadamente. */
+    AnaliseLexicaComSaidas(arquivo_saida, arquivo_lex, arquivo_ts, arquivo_err);
+    if (ftell(arquivo_err) == 0) {
+        fprintf(arquivo_err, "Nenhum erro lexico encontrado.\n");
+    }
+
+    fclose(arquivo_saida);
+    fclose(arquivo_lex);
+    fclose(arquivo_ts);
+    fclose(arquivo_err);
 
     return 0;
 }

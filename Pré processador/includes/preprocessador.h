@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define TAM_LINHA 1024
+#define TAM_LINHA 4096
 
 void remover_comentario(const char *entrada, char *saida);
 void normalizar_espacos(const char *entrada, char *saida);

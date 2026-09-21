@@ -4,9 +4,7 @@
 
 #include "../includes/preprocessador.h"
 
-int executar_teste(const char *nome,
-                   const char *entrada,
-                   const char *esperado)
+int executar_teste(const char *nome, const char *entrada, const char *esperado)
 {
     FILE *arquivo_entrada;
     FILE *arquivo_saida;

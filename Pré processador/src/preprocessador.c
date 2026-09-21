@@ -5,10 +5,10 @@
 
 void remover_comentario(const char * entrada, char * saida) {
 
+    /* O caractere # so inicia comentario quando esta fora de uma string. */
     int dentro_str = 0;
     int i = 0;
     int j = 0;
-    int fechamento_aspas = 0;
 
     while (entrada[i] != '\0') {
 
@@ -56,6 +56,7 @@ void remover_comentario(const char * entrada, char * saida) {
 
 void normalizar_espacos(const char * entrada, char * saida) {
 
+    /* Dentro de strings, espacos e tabulacoes sao preservados exatamente. */
     int dentro_str = 0;
     int i = 0;
     int j = 0;
@@ -108,8 +109,27 @@ void processar_linha(const char *linha, FILE *saida) {
 void preprocessar(FILE * entrada, FILE * saida)
 {
     char linha[TAM_LINHA];
+    char acumulada[TAM_LINHA * 4];
+    size_t tamanho_acumulado = 0;
 
-    while (fgets(linha, TAM_LINHA, entrada) != NULL) {
-        processar_linha(linha, saida);
+     /* fgets pode dividir uma linha muito grande; acumulamos os fragmentos
+         para que a saida nao crie quebras de linha artificiais. */
+     while (fgets(linha, TAM_LINHA, entrada) != NULL) {
+        size_t tamanho = strlen(linha);
+        if (tamanho_acumulado + tamanho >= sizeof(acumulada)) {
+            processar_linha(acumulada, saida);
+            tamanho_acumulado = 0;
+            acumulada[0] = '\0';
+        }
+        memcpy(acumulada + tamanho_acumulado, linha, tamanho + 1);
+        tamanho_acumulado += tamanho;
+        if (tamanho > 0 && linha[tamanho - 1] == '\n') {
+            processar_linha(acumulada, saida);
+            tamanho_acumulado = 0;
+            acumulada[0] = '\0';
+        }
+    }
+    if (tamanho_acumulado > 0) {
+        processar_linha(acumulada, saida);
     }
 }
