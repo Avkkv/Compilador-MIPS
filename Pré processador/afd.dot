@@ -1,0 +1,23 @@
+digraph AFD {
+rankdir=LR;
+
+q0;
+
+qID;
+qDIR;
+qREG;
+qNUM;
+qHEX;
+qNEG;
+qSTR;
+qESC;
+qCOM;
+
+q0 -> qID [label="letra/_"];
+q0 -> qDIR [label="."];
+q0 -> qREG [label="$"];
+q0 -> qNUM [label="digito"];
+q0 -> qNEG [label="-"];
+q0 -> qSTR [label="\""];
+q0 -> qCOM [label="#"];
+}
