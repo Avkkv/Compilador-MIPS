@@ -23,7 +23,9 @@ typedef struct {
 static const Reservada diretivas[] = {
     {".data", "DIR_DATA"}, {".text", "DIR_TEXT"},
     {".word", "DIR_WORD"}, {".asciiz", "DIR_ASCIIZ"},
-    {".ascii", "DIR_ASCII"}, {NULL, NULL}
+    {".ascii", "DIR_ASCII"}, {".half", "DIR_HALF"},{".byte", "DIR_BYTE"},
+    {".space", "DIR_SPACE"},{".globl", "DIR_GLOBL"},
+    {".align", "DIR_ALIGN"},{NULL, NULL}
 };
 
 static const Reservada instrucoes[] = {
@@ -32,7 +34,7 @@ static const Reservada instrucoes[] = {
     {"blt", "INS_BLT"}, {"ble", "INS_BLE"}, {"bgt", "INS_BGT"},
     {"bge", "INS_BGE"}, {"div", "INS_DIV"}, {"j", "INS_J"},
     {"jal", "INS_JAL"}, {"jr", "INS_JR"}, {"li", "INS_LI"},
-    {"lw", "INS_LW"}, {"move", "INS_MOVE"}, {"mul", "INS_MUL"},
+    {"lw", "INS_LW"}, {"la", "INS_LA"}, {"move", "INS_MOVE"}, {"mul", "INS_MUL"},
     {"nor", "INS_NOR"}, {"or", "INS_OR"}, {"sll", "INS_SLL"},
     {"slt", "INS_SLT"}, {"srl", "INS_SRL"}, {"sub", "INS_SUB"},
     {"syscall", "INS_SYSCALL"}, {"xor", "INS_XOR"},
