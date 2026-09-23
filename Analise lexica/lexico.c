@@ -34,11 +34,23 @@ static const Reservada instrucoes[] = {
     {"blt", "INS_BLT"}, {"ble", "INS_BLE"}, {"bgt", "INS_BGT"},
     {"bge", "INS_BGE"}, {"div", "INS_DIV"}, {"j", "INS_J"},
     {"jal", "INS_JAL"}, {"jr", "INS_JR"}, {"li", "INS_LI"},
-    {"lw", "INS_LW"}, {"la", "INS_LA"}, {"move", "INS_MOVE"}, {"mul", "INS_MUL"},
+    {"lw", "INS_LW"}, {"la", "INS_LA"}, {"sw", "INS_SW"},
+    {"lb", "INS_LB"}, {"sb", "INS_SB"}, {"lh", "INS_LH"}, {"sh", "INS_SH"},
+    {"move", "INS_MOVE"}, {"mul", "INS_MUL"},
     {"nor", "INS_NOR"}, {"or", "INS_OR"}, {"sll", "INS_SLL"},
     {"slt", "INS_SLT"}, {"srl", "INS_SRL"}, {"sub", "INS_SUB"},
+    {"subu", "INS_SUBU"}, {"mflo", "INS_MFLO"}, {"mfhi", "INS_MFHI"},
     {"syscall", "INS_SYSCALL"}, {"xor", "INS_XOR"},
     {"nop", "INS_NOP"}, {NULL, NULL}
+};
+
+/* Lista compartilhada de registradores nomeados, usada tanto para validar
+   um lexema iniciado por '$' quanto para pre-carregar a Tabela de Simbolos. */
+static const char *registradores_nomeados[] = {
+    "$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3",
+    "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+    "$t8", "$t9", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5",
+    "$s6", "$s7", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra", NULL
 };
 
 /* Procura um lexema em uma tabela terminada por uma entrada NULL. */
@@ -55,19 +67,13 @@ static const char *buscar(const Reservada *lista, const char *lexema)
 
 static int eh_registrador(const char *lexema)
 {
-    static const char *nomes[] = {
-        "$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3",
-        "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-        "$t8", "$t9", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5",
-        "$s6", "$s7", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra", NULL
-    };
     int indice;
     char *ponteiro_fim;
     long valor_numerico;
 
     /* Primeiro verifica os nomes simbolicos, como $t0 e $sp. */
-    for (indice = 0; nomes[indice] != NULL; indice++) {
-        if (strcmp(lexema, nomes[indice]) == 0) return 1;
+    for (indice = 0; registradores_nomeados[indice] != NULL; indice++) {
+        if (strcmp(lexema, registradores_nomeados[indice]) == 0) return 1;
     }
     if (lexema[0] != '$' || lexema[1] == '\0') return 0;
     /* Depois aceita a forma numerica somente no intervalo de 0 a 31. */
@@ -89,7 +95,16 @@ static void registrar_simbolo(Simbolo *simbolos, int *quantidade_simbolos,
     int indice;
     /* A tabela deve conter cada lexema uma unica vez. */
     for (indice = 0; indice < *quantidade_simbolos; indice++) {
-        if (strcmp(simbolos[indice].lexema, lexema) == 0) return;
+        if (strcmp(simbolos[indice].lexema, lexema) == 0) {
+            /* Reservada pre-carregada (linha=coluna=0) ainda sem uso real:
+               registra agora a posicao da primeira ocorrencia de verdade. */
+            if (simbolos[indice].linha == 0 && simbolos[indice].coluna == 0 &&
+                (linha != 0 || coluna != 0)) {
+                simbolos[indice].linha = linha;
+                simbolos[indice].coluna = coluna;
+            }
+            return;
+        }
     }
     if (*quantidade_simbolos >= MAX_SIMBOLOS) return;
     strcpy(simbolos[*quantidade_simbolos].lexema, lexema);
@@ -109,6 +124,33 @@ static void registrar_erro(FILE *erros, const char *tipo, const char *lexema,
                            int linha, int coluna)
 {
     fprintf(erros, "<%s, %s> %d %d\n", tipo, lexema, linha, coluna);
+}
+
+/* Verifica a gramatica do identificador: (letra | _) (letra | digito | _)*
+   Um lexema que comece por letra/'_' mas contenha qualquer outro caractere
+   (por exemplo "-", "@") ate o proximo delimitador e malformado. */
+static int identificador_valido(const char *lexema)
+{
+    int indice;
+    if (!(isalpha((unsigned char)lexema[0]) || lexema[0] == '_')) return 0;
+    for (indice = 1; lexema[indice] != '\0'; indice++) {
+        if (!(isalnum((unsigned char)lexema[indice]) || lexema[indice] == '_')) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* Copia 'origem' para 'destino' convertendo cada caractere para minusculo.
+   Usada para normalizar instrucoes, diretivas e registradores, conforme
+   exigido pelo enunciado (rotulos NAO passam por aqui: sao case-sensitive). */
+static void para_minusculas(char *destino, const char *origem)
+{
+    int indice;
+    for (indice = 0; origem[indice] != '\0'; indice++) {
+        destino[indice] = (char)tolower((unsigned char)origem[indice]);
+    }
+    destino[indice] = '\0';
 }
 
 static int numero_valido(const char *lexema)
@@ -138,6 +180,23 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
     static Simbolo simbolos[MAX_SIMBOLOS];
     int quantidade_simbolos = 0;
     int caractere, linha = 1, coluna = 1;
+    int indice_inicial;
+
+    /* O enunciado exige que a TS ja contenha, desde a inicializacao, todas
+       as instrucoes, diretivas e registradores previstos, com linha/coluna
+       zeradas ate a primeira utilizacao real no programa. */
+    for (indice_inicial = 0; diretivas[indice_inicial].lexema != NULL; indice_inicial++) {
+        registrar_simbolo(simbolos, &quantidade_simbolos,
+                          diretivas[indice_inicial].lexema, "diretiva", 0, 0);
+    }
+    for (indice_inicial = 0; instrucoes[indice_inicial].lexema != NULL; indice_inicial++) {
+        registrar_simbolo(simbolos, &quantidade_simbolos,
+                          instrucoes[indice_inicial].lexema, "instrucao", 0, 0);
+    }
+    for (indice_inicial = 0; registradores_nomeados[indice_inicial] != NULL; indice_inicial++) {
+        registrar_simbolo(simbolos, &quantidade_simbolos,
+                          registradores_nomeados[indice_inicial], "registrador", 0, 0);
+    }
 
      /* O laço implementa o percurso do AFD: cada bloco trata um estado
          inicial diferente e consome exatamente um lexema ou simbolo. */
@@ -147,6 +206,11 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
         char lexema[MAX_LEXEMA];
         int tamanho = 0;
 
+        if (caractere == '\r') {
+            /* CRLF (Windows): o \r e descartado sem alterar linha/coluna,
+               para que o resultado seja identico ao de um arquivo so com \n. */
+            continue;
+        }
         if (caractere == '\n') { linha++; coluna = 1; continue; }
         if (isspace((unsigned char)caractere)) { coluna++; continue; }
         if (caractere == '#') {
@@ -176,8 +240,15 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
                 }
                 coluna++;
                 if (caractere == '\\') {
+                    int coluna_barra = coluna - 1;
                     caractere = fgetc(entrada);
                     if (caractere == EOF || caractere == '\n') break;
+                    if (caractere != 'n' && caractere != 't' && caractere != '"' &&
+                        caractere != '\\' && caractere != '0') {
+                        char sequencia[3] = { '\\', (char)caractere, '\0' };
+                        registrar_erro(erros, "ERRO_SEQUENCIA_ESCAPE_INVALIDA",
+                                       sequencia, linha_inicio, coluna_barra);
+                    }
                     if (tamanho < MAX_LEXEMA - 1) {
                         lexema[tamanho++] = (char)caractere;
                     }
@@ -190,17 +261,20 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
             lexema[tamanho] = '\0';
             if (fechada) {
                 emitir(saida, "STRING", lexema, linha_inicio, coluna_inicio);
-                registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
-                                  "cadeia", linha_inicio, coluna_inicio);
-            } else {
+                /* Cadeias de caracteres nao devem ser armazenadas na TS. */
+            } else if (caractere == EOF) {
                 /* A analise continua depois da string incompleta. */
-                registrar_erro(erros, "ERRO_STRING_NAO_FECHADA", lexema,
+                registrar_erro(erros, "ERRO_STRING_NAO_FECHADA_EOF", lexema,
+                               linha_inicio, coluna_inicio);
+            } else {
+                registrar_erro(erros, "ERRO_STRING_NAO_FECHADA_LINHA", lexema,
                                linha_inicio, coluna_inicio);
             }
             if (caractere == '\n') { linha++; coluna = 1; }
             continue;
         }
         if (caractere == '$') {
+            char lexema_min[MAX_LEXEMA];
             lexema[tamanho++] = (char)caractere; coluna++;
             while ((caractere = fgetc(entrada)) != EOF && !fim_lexema(caractere)) {
                 if (tamanho < MAX_LEXEMA - 1) {
@@ -209,9 +283,10 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
                 coluna++;
             }
             lexema[tamanho] = '\0';
-            if (eh_registrador(lexema)) {
-                emitir(saida, "REG", lexema, linha_inicio, coluna_inicio);
-                registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
+            para_minusculas(lexema_min, lexema);
+            if (eh_registrador(lexema_min)) {
+                emitir(saida, "REG", lexema_min, linha_inicio, coluna_inicio);
+                registrar_simbolo(simbolos, &quantidade_simbolos, lexema_min,
                                   "registrador", linha_inicio, coluna_inicio);
             } else {
                 /* O restante iniciado por $ e consumido como um unico erro. */
@@ -232,10 +307,9 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
             lexema[tamanho] = '\0';
             if (numero_valido(lexema)) {
                 emitir(saida, "NUM_INT", lexema, linha_inicio, coluna_inicio);
-                registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
-                                  "numero", linha_inicio, coluna_inicio);
+                /* Numeros nao devem ser armazenados na TS. */
             } else {
-                registrar_erro(erros, "ERRO_NUMERO_INVALIDO", lexema,
+                registrar_erro(erros, "ERRO_NUMERO_MALFORMADO", lexema,
                                linha_inicio, coluna_inicio);
             }
             if (caractere != EOF) ungetc(caractere, entrada);
@@ -244,6 +318,7 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
         if (caractere == '.' || isalpha((unsigned char)caractere) ||
             caractere == '_') {
             const char *nome_token;
+            char lexema_min[MAX_LEXEMA];
             lexema[tamanho++] = (char)caractere; coluna++;
             while ((caractere = fgetc(entrada)) != EOF && !fim_lexema(caractere)) {
                 if (tamanho < MAX_LEXEMA - 1) {
@@ -252,31 +327,42 @@ void AnaliseLexicaComSaidas(FILE *entrada, FILE *saida,
                 coluna++;
             }
             lexema[tamanho] = '\0';
+            para_minusculas(lexema_min, lexema);
             if (lexema[0] == '.') {
-                nome_token = buscar(diretivas, lexema);
+                /* Diretiva: comparar com a lista fixa (normalizada para
+                   minusculas); nao ha "ID" iniciado por ponto, entao nao
+                   se aplica validacao de identificador. */
+                nome_token = buscar(diretivas, lexema_min);
                 if (nome_token != NULL) {
-                    if (caractere == ':') {
-                        registrar_erro(erros, "ERRO_IDENTIFICADOR_RESERVADO", lexema,
-                                       linha_inicio, coluna_inicio);
-                    } else {
-                        emitir(saida, nome_token, lexema, linha_inicio, coluna_inicio);
-                        registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
-                                          "diretiva", linha_inicio, coluna_inicio);
-                    }
-                } else registrar_erro(erros, "ERRO_DIRETIVA_INVALIDA", lexema,
-                                      linha_inicio, coluna_inicio);
-            } else {
-                /* Palavra reservada vira instrucao; qualquer outra palavra vira ID. */
-                nome_token = buscar(instrucoes, lexema);
-                if (nome_token != NULL && caractere == ':') {
-                    registrar_erro(erros, "ERRO_IDENTIFICADOR_RESERVADO", lexema,
-                                   linha_inicio, coluna_inicio);
+                    emitir(saida, nome_token, lexema_min, linha_inicio, coluna_inicio);
+                    registrar_simbolo(simbolos, &quantidade_simbolos, lexema_min,
+                                      "diretiva", linha_inicio, coluna_inicio);
                 } else {
-                    emitir(saida, nome_token == NULL ? "ID" : nome_token, lexema,
-                           linha_inicio, coluna_inicio);
-                    registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
-                                      nome_token == NULL ? "identificador/rotulo" :
+                    registrar_erro(erros, "ERRO_DIRETIVA_INVALIDA", lexema,
+                                   linha_inicio, coluna_inicio);
+                }
+            } else if (!identificador_valido(lexema)) {
+                /* Contem caractere fora de (letra|digito|_), ex: "soma-total",
+                   "inicio@". Nao e responsabilidade lexica decidir se e rotulo. */
+                registrar_erro(erros, "ERRO_IDENTIFICADOR_MALFORMADO", lexema,
+                               linha_inicio, coluna_inicio);
+            } else {
+                /* Instrucoes sao normalizadas para minusculas antes da busca
+                   (ex: "ADD" e reconhecida como INS_ADD). Se NAO for uma
+                   palavra reservada, o lexema vira ID e mantem o case
+                   original, pois rotulos sao sensiveis a maiusculas/minusculas.
+                   Mesmo que seja seguida de ':', a instrucao e emitida
+                   normalmente: validar se ela pode ser rotulo e
+                   responsabilidade sintatica, nao lexica. */
+                nome_token = buscar(instrucoes, lexema_min);
+                if (nome_token != NULL) {
+                    emitir(saida, nome_token, lexema_min, linha_inicio, coluna_inicio);
+                    registrar_simbolo(simbolos, &quantidade_simbolos, lexema_min,
                                       "instrucao", linha_inicio, coluna_inicio);
+                } else {
+                    emitir(saida, "ID", lexema, linha_inicio, coluna_inicio);
+                    registrar_simbolo(simbolos, &quantidade_simbolos, lexema,
+                                      "identificador/rotulo", linha_inicio, coluna_inicio);
                 }
             }
             if (caractere != EOF) ungetc(caractere, entrada);
