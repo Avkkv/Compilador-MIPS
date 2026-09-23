@@ -17,6 +17,23 @@ make
 
 Isso cria o binário em `bin/main`.
 
+ou caso não dê certo, é possível criar o diretório manualmente:
+
+```bash
+mkdir bin
+```
+Cria a pasta bin
+
+```bash
+mkdir tests\saidas -Force
+```
+Cria a pasta "saidas" em "tests"
+
+```bash
+gcc -std=c99 -Wall -Wextra -pedantic -Iinclude src/main.c src/preprocessador.c src/lexico.c -o bin/main.exe
+```
+Faz a compilação
+
 ## Executar
 
 ```bash
@@ -26,6 +43,12 @@ make run INPUT=tests/entradas/correto1.asm OUTPUT_PRE=tests/saidas/correto1.pre 
 O programa cria automaticamente os arquivos:
 - `tests/saidas/correto1.ts`
 - `tests/saidas/correto1.err`
+
+ou pode ser feito sem o make:
+
+```bash
+.\bin\main.exe tests\entradas\correto1.asm tests\saidas\correto1.pre tests\saidas\correto1.lex
+```
 
 ## Fluxo
 
