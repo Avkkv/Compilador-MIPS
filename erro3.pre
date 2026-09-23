@@ -1,2 +1,0 @@
-.data
-msg: .asciiz "Mensagem

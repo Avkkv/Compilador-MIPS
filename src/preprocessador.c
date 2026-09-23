@@ -1,69 +1,58 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include"../includes/preprocessador.h"
+
+#include "preprocessador.h"
 
 void remover_comentario(const char * entrada, char * saida) {
-
-    /* O caractere # so inicia comentario quando esta fora de uma string. */
     int dentro_str = 0;
     int i = 0;
     int j = 0;
 
     while (entrada[i] != '\0') {
-
         char c = entrada[i];
 
-        if (c == '"') {   
+        if (c == '"') {
             dentro_str = !dentro_str;
-            saida[j++] = c; 
-        }
-
-        // Aqui o código altera oo valor da variável dentro_string (que vale 0 que representa falso), para 1(verdadeiro), e checa depois.
-        else if (c == '#' && !dentro_str) { 
-            while (entrada[i] != '\n' && entrada[i] != '\0') i++;       
-        }
-        else if (c == '#' && dentro_str) {            
-                int tem_fechamento_na_linha = 0;
-
-                 // Olha para a frente (sem mover o i) procurando aspa antes do \n
-                for (int k = i + 1; entrada[k] != '\n' && entrada[k] != '\0'; k++) {
-                    if (entrada[k] == '"') {
-                        tem_fechamento_na_linha = 1;
-                        break;
-                    }
-                }
-
-        // Se tem aspa fechando na mesma linha, o '#' faz parte da string
-        if (tem_fechamento_na_linha) {
             saida[j++] = c;
-        } 
-        // Se nao fecha na mesma linha, a string é aberta e o # vira comentario
-        else {
-            while (entrada[i] != '\n' && entrada[i] != '\0') {
-                i++;
+        }
+        else if (c == '#' && !dentro_str) {
+            while (entrada[i] != '\n' && entrada[i] != '\0') i++;
+        }
+        else if (c == '#' && dentro_str) {
+            int tem_fechamento_na_linha = 0;
+
+            for (int k = i + 1; entrada[k] != '\n' && entrada[k] != '\0'; k++) {
+                if (entrada[k] == '"') {
+                    tem_fechamento_na_linha = 1;
+                    break;
+                }
+            }
+
+            if (tem_fechamento_na_linha) {
+                saida[j++] = c;
+            } else {
+                while (entrada[i] != '\n' && entrada[i] != '\0') {
+                    i++;
+                }
             }
         }
-        }                 
-        else saida[j++] = c;      
-        if (entrada[i] != '\0') i++;
-        
-        saida[j] = '\0';       
-    }
+        else {
+            saida[j++] = c;
+        }
 
-    
+        if (entrada[i] != '\0') i++;
+        saida[j] = '\0';
+    }
 }
 
 void normalizar_espacos(const char * entrada, char * saida) {
-
-    /* Dentro de strings, espacos e tabulacoes sao preservados exatamente. */
     int dentro_str = 0;
     int i = 0;
     int j = 0;
     int tem_conteudo = 0;
 
     while (entrada[i] != '\0') {
-
         char c = entrada[i];
 
         if (c == '"') {
@@ -89,12 +78,11 @@ void normalizar_espacos(const char * entrada, char * saida) {
     }
 
     while (j > 0 && saida[j - 1] == ' ') j--;
-   
+
     saida[j] = '\0';
 }
 
 void processar_linha(const char *linha, FILE *saida) {
-
     char sem_comentario[TAM_LINHA];
     char normalizada[TAM_LINHA];
 
@@ -112,9 +100,7 @@ void preprocessar(FILE * entrada, FILE * saida)
     char acumulada[TAM_LINHA * 4];
     size_t tamanho_acumulado = 0;
 
-     /* fgets pode dividir uma linha muito grande; acumulamos os fragmentos
-         para que a saida nao crie quebras de linha artificiais. */
-     while (fgets(linha, TAM_LINHA, entrada) != NULL) {
+    while (fgets(linha, TAM_LINHA, entrada) != NULL) {
         size_t tamanho = strlen(linha);
         if (tamanho_acumulado + tamanho >= sizeof(acumulada)) {
             processar_linha(acumulada, saida);
