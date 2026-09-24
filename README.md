@@ -9,6 +9,31 @@
 - tests/esperados/: saídas esperadas para validação
 - Makefile: compilação automatizada
 
+```text
+Compilador-MIPS/
+├── Relatorio_Compilador.pdf
+├── README.md
+├── GUIA_DO_PROJETO.txt
+├── .gitattributes
+├── .gitignore
+├── docs/
+│   └── GUIA_DO_PROJETO.md
+├── include/
+│   ├── lexico.h
+│   └── preprocessador.h
+├── src/
+│   ├── main.c
+│   ├── lexico.c
+│   └── preprocessador.c
+└── tests/
+    ├── entradas/
+    │   ├── correto1.asm
+    │   ├── correto2.asm
+    │   ├── correto3.asm
+    │   └── outros arquivos .asm
+    └── saidas/
+```
+
 ## Compilar
 
 A partir da raiz do projeto:
