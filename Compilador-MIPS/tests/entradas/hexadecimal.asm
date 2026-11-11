@@ -1,5 +1,0 @@
-.text
-main:
-li $t0, 0x10
-li $t1, 0xFF
-li $t2, -0x20
