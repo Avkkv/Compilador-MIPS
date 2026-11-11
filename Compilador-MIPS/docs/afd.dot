@@ -1,0 +1,126 @@
+// AFD do analisador lexico (src/lexico.c, funcao ProximoToken).
+// Os nomes dos estados sao os mesmos do enum Estado no codigo.
+// O delimitador nao faz parte do lexema: ele e devolvido a entrada e lido de novo a partir de Q0.
+
+digraph AFD {
+    rankdir=LR;
+    newrank=true;
+    nodesep=0.35;
+    ranksep=0.9;
+    fontname="Helvetica";
+    node [fontname="Helvetica", fontsize=16, shape=circle, style=filled,
+          fillcolor="#ffffff", width=1.1, fixedsize=false];
+    edge [fontname="Helvetica", fontsize=14];
+
+    label=<<b>AFD do Analisador Léxico (Assembly MIPS)</b><br/><font point-size="14">delim = espaço, tab, \\n, EOF, vírgula, dois-pontos, parênteses, # ou aspas (o delimitador é devolvido e relido a partir de Q0)<br/>Em qualquer estado, um lexema com mais de 99 caracteres gera ERRO_LEXEMA_MUITO_LONGO</font>>;
+    labelloc=t;
+    fontsize=22;
+
+    inicio [shape=point, width=0.15, label=""];
+    inicio -> Q0;
+
+    Q0 [fillcolor="#dbeafe", penwidth=2];
+
+    // ---------------- identificadores e instrucoes
+    Q_ID;
+    F_ID    [shape=doublecircle, fillcolor="#dcfce7", label="F_ID\nINS_* ou ID"];
+    Q0   -> Q_ID   [label="letra, _"];
+    Q_ID -> Q_ID   [label="letra, dígito, _"];
+    Q_ID -> F_ID   [label="delim\n(consulta a TS)"];
+
+    // ---------------- diretivas
+    Q_PONTO;
+    Q_DIR;
+    F_DIR   [shape=doublecircle, fillcolor="#dcfce7", label="F_DIR\nDIR_*"];
+    Q0      -> Q_PONTO [label="."];
+    Q_PONTO -> Q_DIR   [label="letra"];
+    Q_DIR   -> Q_DIR   [label="letra"];
+    Q_DIR   -> F_DIR   [label="delim e está\nna lista"];
+
+    // ---------------- registradores
+    Q_DOLAR;
+    Q_REG;
+    F_REG   [shape=doublecircle, fillcolor="#dcfce7", label="F_REG\nREG"];
+    Q0      -> Q_DOLAR [label="$"];
+    Q_DOLAR -> Q_REG   [label="letra, dígito"];
+    Q_REG   -> Q_REG   [label="letra, dígito"];
+    Q_REG   -> F_REG   [label="delim e está\nna lista"];
+
+    // ---------------- numeros
+    Q_MENOS;
+    Q_ZERO;
+    Q_ZERO_X;
+    Q_HEX;
+    Q_DEC;
+    F_NUM   [shape=doublecircle, fillcolor="#dcfce7", label="F_NUM\nNUM_INT"];
+    Q0       -> Q_MENOS  [label="-"];
+    Q0       -> Q_ZERO   [label="0"];
+    Q0       -> Q_DEC    [label="1-9"];
+    Q_MENOS  -> Q_ZERO   [label="0"];
+    Q_MENOS  -> Q_DEC    [label="1-9"];
+    Q_ZERO   -> Q_ZERO_X [label="x, X"];
+    Q_ZERO   -> Q_DEC    [label="dígito"];
+    Q_ZERO   -> F_NUM    [label="delim"];
+    Q_DEC    -> Q_DEC    [label="dígito"];
+    Q_DEC    -> F_NUM    [label="delim"];
+    Q_ZERO_X -> Q_HEX    [label="0-9, a-f, A-F"];
+    Q_HEX    -> Q_HEX    [label="0-9, a-f, A-F"];
+    Q_HEX    -> F_NUM    [label="delim"];
+
+    // ---------------- cadeias
+    Q_STR;
+    Q_ESC;
+    F_STR   [shape=doublecircle, fillcolor="#dcfce7", label="F_STR\nSTRING"];
+    Q0    -> Q_STR [label="\""];
+    Q_STR -> Q_STR [label="outro"];
+    Q_STR -> Q_ESC [label="\\"];
+    Q_STR -> F_STR [label="\""];
+    Q_ESC -> Q_STR [label="n, t, \", \\, 0"];
+    Q_ESC -> Q_STR [label="outro\n/ registra\nERRO_SEQUENCIA_\nESCAPE_INVALIDA", color="#b45309", fontcolor="#b45309"];
+
+    // ---------------- comentario (normalmente ja removido no pre-processamento)
+    Q_COMENT;
+    Q0       -> Q_COMENT [label="#"];
+    Q_COMENT -> Q_COMENT [label="outro"];
+    Q_COMENT -> Q0       [label="\\n, EOF\n(sem token)", style=dashed];
+
+    // ---------------- simbolos e fim de arquivo
+    F_COM [shape=doublecircle, fillcolor="#dcfce7", label="F_COM\nSMB_COM"];
+    F_COL [shape=doublecircle, fillcolor="#dcfce7", label="F_COL\nSMB_COL"];
+    F_OPA [shape=doublecircle, fillcolor="#dcfce7", label="F_OPA\nSMB_OPA"];
+    F_CPA [shape=doublecircle, fillcolor="#dcfce7", label="F_CPA\nSMB_CPA"];
+    F_EOF [shape=doublecircle, fillcolor="#dcfce7", label="F_EOF\nTK_EOF"];
+    Q0 -> F_COM [label=","];
+    Q0 -> F_COL [label=":"];
+    Q0 -> F_OPA [label="("];
+    Q0 -> F_CPA [label=")"];
+    Q0 -> F_EOF [label="EOF"];
+    Q0 -> Q0    [label="espaço, tab, \\n"];
+
+    // ---------------- erros
+    Q_ERRO [fillcolor="#fee2e2", label="Q_ERRO\n(consome até\no delim)"];
+    E      [shape=doublecircle, fillcolor="#fecaca", label="E\nregistra erro\nno .err e\nvolta a Q0"];
+    Q_ERRO -> Q_ERRO [label="não delim"];
+    Q_ERRO -> E      [label="delim"];
+
+    edge [color="#b91c1c", fontcolor="#b91c1c"];
+    Q0       -> E      [label="outro\nCARACTERE_INVALIDO"];
+    Q_MENOS  -> E      [label="outro (devolvido)\nCARACTERE_INVALIDO '-'"];
+    Q_ID     -> Q_ERRO [label="outro\nIDENTIFICADOR_MALFORMADO"];
+    Q_ID     -> E      [label="instrução seguida de ':'\nROTULO_RESERVADO"];
+    Q_PONTO  -> Q_ERRO [label="outro\nDIRETIVA_INVALIDA"];
+    Q_PONTO  -> E      [label="delim\nDIRETIVA_INVALIDA"];
+    Q_DIR    -> Q_ERRO [label="outro\nDIRETIVA_INVALIDA"];
+    Q_DIR    -> E      [label="delim e fora da lista\nDIRETIVA_INVALIDA;\ndiretiva seguida de ':'\nROTULO_RESERVADO"];
+    Q_DOLAR  -> Q_ERRO [label="outro\nREGISTRADOR_INVALIDO"];
+    Q_DOLAR  -> E      [label="delim\nREGISTRADOR_INVALIDO"];
+    Q_REG    -> Q_ERRO [label="outro\nREGISTRADOR_INVALIDO"];
+    Q_REG    -> E      [label="delim e fora da lista\nREGISTRADOR_INVALIDO"];
+    Q_ZERO   -> Q_ERRO [label="outro\nletra: IDENTIFICADOR_MALFORMADO\ndemais: NUMERO_MALFORMADO"];
+    Q_DEC    -> Q_ERRO [label="outro\nletra: IDENTIFICADOR_MALFORMADO\n(se não começou com -)\ndemais: NUMERO_MALFORMADO"];
+    Q_ZERO_X -> Q_ERRO [label="outro\nNUMERO_MALFORMADO"];
+    Q_ZERO_X -> E      [label="delim\nNUMERO_MALFORMADO"];
+    Q_HEX    -> Q_ERRO [label="outro\nNUMERO_MALFORMADO"];
+    Q_STR    -> E      [label="\\n: STRING_NAO_FECHADA_LINHA\nEOF: STRING_NAO_FECHADA_EOF"];
+    Q_ESC    -> E      [label="\\n: STRING_NAO_FECHADA_LINHA\nEOF: STRING_NAO_FECHADA_EOF"];
+}
