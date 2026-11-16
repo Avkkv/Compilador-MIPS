@@ -10,6 +10,7 @@
 
 #include "preprocessador.h"
 #include "lexico.h"
+#include "sintatico.h"
 
 #define TAM_NOME_ARQUIVO 1024
 
