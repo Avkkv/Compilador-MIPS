@@ -40,6 +40,9 @@ gcc main.c preprocessador.c lexico.c sintatico.c -o main.exe
 ./main.exe teste.asm resultado
 ```
 
+`./main.exe` funciona no PowerShell, no terminal do VS Code, no Git Bash e no Linux. No Prompt de Comando (cmd)
+do Windows, use `main.exe teste.asm resultado`.
+
 São gerados, a partir do prefixo:
 
 | Arquivo | Conteúdo |
@@ -63,12 +66,22 @@ No Windows, `main()` configura o console para UTF-8 durante a execução, para q
 
 ## Testes
 
-```bash
-sh tests/sintatico/executar_testes.sh
+Depois de compilar o `main.exe`, a partir da raiz do projeto:
+
+```bat
+.\tests\sintatico\executar_testes.bat
 ```
+
+No Windows, o comando funciona no Prompt de Comando, no PowerShell e no terminal do VS Code, sem instalar nada.
+No Linux, ou no Git Bash/WSL, use `sh tests/sintatico/executar_testes.sh`.
+
+Cada caso mostra `ok` quando o código de encerramento é o esperado: 0 para os arquivos `valido*` e 1 para os demais.
 
 ## Renderizar a árvore sintática
 
 ```bash
 dot -Tpng resultado.dot -o resultado.png
 ```
+
+O comando `dot` é do Graphviz (https://graphviz.org/download/), que precisa estar instalado. Isso é opcional:
+as imagens das árvores dos programas válidos de teste já estão prontas em `tests/sintatico/saidas/*.png`.
