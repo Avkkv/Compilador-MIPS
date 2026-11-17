@@ -1,0 +1,19 @@
+.data
+mensagem: .asciiz "ok"
+.text
+main:
+add $t0, $t1
+move $t0, $t1, $t2
+syscall $t0
+nop nop
+jr $ra, $t0
+addi $t0, 5, $t1
+li $t0, mensagem
+la $t0, 10
+j $ra
+beq $t0, $t1, 10
+lw $t0, $t1
+sll $t0, $t1, $t2
+mflo
+li $v0, 10
+syscall

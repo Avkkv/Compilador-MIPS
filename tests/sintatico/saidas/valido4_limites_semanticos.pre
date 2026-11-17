@@ -1,0 +1,15 @@
+.data
+dup: .word 1
+dup: .word 2
+.space -5
+.align 99
+.text
+main:
+j inexistente
+beq $t0, $t1, outro_inexistente
+la $a0, nao_declarado
+sll $t0, $t1, 99
+li $t0, 99999999999
+addi $t0, $t0, 70000
+syscall
+main:

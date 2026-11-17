@@ -23,4 +23,11 @@ void remover_comentario(const char *entrada, char *saida);
 void normalizar_espacos(const char *entrada, char *saida);
 void processar_linha(const char *linha, FILE *saida);
 
+/*  Converte uma posicao (linha, coluna) do arquivo .pre na posicao correspondente do arquivo original (.asm)
+    processado pela ultima chamada de PreProcessamento. As colunas contam caracteres, como no analisador lexico.
+    Uma coluna depois do fim da linha do .pre (ex.: o fim da linha) e convertida para a mesma distancia depois do
+    ultimo caractere no original; uma linha depois da ultima do .pre corresponde ao fim do arquivo original.
+    Devolve 1 se converteu, ou 0 se nao houver informacao (nesse caso *linha e *coluna nao sao alterados). */
+int PosicaoOriginal(int linha_pre, int coluna_pre, int *linha, int *coluna);
+
 #endif

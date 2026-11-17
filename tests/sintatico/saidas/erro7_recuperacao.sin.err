@@ -1,0 +1,14 @@
+Linha 1, coluna 7:
+Encontrado NUM_INT("1"); esperado EOL (fim da linha).
+Linha 3, coluna 12:
+Encontrado EOL (fim da linha); esperado NUM_INT.
+Linha 5, coluna 7:
+Encontrado ID("main"); esperado EOL (fim da linha).
+Linha 7, coluna 17:
+Encontrado EOL (fim da linha); esperado SMB_COM(",").
+Linha 10, coluna 5:
+Encontrado INS_LW("lw"); esperado rótulo (ID), diretiva de dados ou DIR_GLOBL(".globl"); instruções só são permitidas na seção .text.
+Linha 12, coluna 16:
+Encontrado EOL (fim da linha); esperado NUM_INT.
+Linha 17, coluna 12:
+Encontrado EOL (fim da linha); esperado NUM_INT.

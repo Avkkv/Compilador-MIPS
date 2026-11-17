@@ -7,3 +7,7 @@ build/
 *.err
 __pycache__/
 .DS_Store
+
+# Saidas dos testes da analise sintatica sao versionadas (fazem parte do relatorio)
+!tests/sintatico/saidas/
+!tests/sintatico/saidas/*

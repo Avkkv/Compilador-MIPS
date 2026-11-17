@@ -154,8 +154,10 @@ static void lexema_adicionar(Lexema *l, int c) {
  * Tabela de Simbolos
  * ------------------------------------------------------------------------ */
 static void copiar(char *destino, const char *origem, size_t tamanho) {
-    strncpy(destino, origem, tamanho - 1);
-    destino[tamanho - 1] = '\0';
+    size_t n = strlen(origem);
+    if (n >= tamanho) n = tamanho - 1;
+    memcpy(destino, origem, n);
+    destino[n] = '\0';
 }
 
 static void ts_registrar(const char *lexema, const char *categoria, int linha, int coluna) {

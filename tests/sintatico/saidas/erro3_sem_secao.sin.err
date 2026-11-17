@@ -1,0 +1,8 @@
+Linha 1, coluna 1:
+Encontrado ID("main"); esperado DIR_DATA(".data") ou DIR_TEXT(".text").
+Linha 2, coluna 5:
+Encontrado INS_LI("li"); esperado DIR_DATA(".data") ou DIR_TEXT(".text").
+Linha 3, coluna 5:
+Encontrado INS_ADD("add"); esperado DIR_DATA(".data") ou DIR_TEXT(".text").
+Linha 6, coluna 17:
+Encontrado EOL (fim da linha); esperado SMB_COM(",").

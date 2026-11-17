@@ -1,6 +1,6 @@
 /*  Testes unitarios do pre-processador.
     Compilar a partir da raiz do projeto:
-    gcc -std=c99 -Wall -Wextra -pedantic -Iinclude tests/test_preprocessador.c src/preprocessador.c -o test_preprocessador.exe */
+    gcc -std=c99 -Wall -Wextra -pedantic -I. tests/test_preprocessador.c preprocessador.c -o test_preprocessador.exe */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,0 +1,26 @@
+Linha 5, coluna 17:
+Encontrado EOL (fim da linha); esperado SMB_COM(",").
+Linha 6, coluna 18:
+Encontrado SMB_COM(","); esperado EOL (fim da linha).
+Linha 7, coluna 13:
+Encontrado REG("$t0"); esperado EOL (fim da linha).
+Linha 8, coluna 9:
+Encontrado INS_NOP("nop"); esperado EOL (fim da linha).
+Linha 9, coluna 11:
+Encontrado SMB_COM(","); esperado EOL (fim da linha).
+Linha 10, coluna 15:
+Encontrado NUM_INT("5"); esperado REG.
+Linha 11, coluna 13:
+Encontrado ID("mensagem"); esperado NUM_INT.
+Linha 12, coluna 13:
+Encontrado NUM_INT("10"); esperado ID.
+Linha 13, coluna 7:
+Encontrado REG("$ra"); esperado ID.
+Linha 14, coluna 19:
+Encontrado NUM_INT("10"); esperado ID.
+Linha 15, coluna 13:
+Encontrado REG("$t1"); esperado ID ou NUM_INT seguido de SMB_OPA("(") REG SMB_CPA(")").
+Linha 16, coluna 19:
+Encontrado REG("$t2"); esperado NUM_INT.
+Linha 17, coluna 9:
+Encontrado EOL (fim da linha); esperado REG.

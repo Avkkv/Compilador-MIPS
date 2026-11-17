@@ -1,0 +1,41 @@
+.text
+.globl main
+main:
+add $t0, $t1, $t2
+addu $t0, $t1, $t2
+sub $t0, $t1, $t2
+subu $t0, $t1, $t2
+mul $t0, $t1, $t2
+and $t0, $t1, $t2
+or $t0, $t1, $t2
+xor $t0, $t1, $t2
+nor $t0, $t1, $t2
+slt $t0, $t1, $t2
+move $s0, $t0
+div $t0, $t1
+mflo $t3
+mfhi $t4
+addi $t0, $t0, -1
+addi $t1, $zero, 0xFF
+sll $t2, $t1, 2
+srl $t2, $t1, 0x1
+li $v0, 4
+la $a0, mensagem
+lw $t0, numero
+sw $t0, 4($sp)
+lb $t1, 0($a0)
+sb $t1, -1($sp)
+lh $t2, 0x10($gp)
+sh $t2, valor
+laco: beq $t0, $t1, fim
+bne $t0, $zero, laco
+blt $t0, $t1, laco
+ble $t0, $t1, laco
+bgt $t0, $t1, laco
+bge $t0, $t1, laco
+jal funcao
+j fim
+funcao: jr $ra
+fim:
+nop
+syscall

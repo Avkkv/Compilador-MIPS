@@ -1,0 +1,15 @@
+.data
+lista: .word 10,
+vetor .word 1, 2
+nums: .word 1 2
+nome: .asciiz "a", "b"
+.globl
+.text
+inicio li $t0, 1
+add $t0 $t1, $t2
+lw $t0, 4 $sp
+lw $t0, 4($sp
+sw $t0, 4 $sp)
+li $t0 10
+li $v0, 10
+syscall

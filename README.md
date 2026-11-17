@@ -1,28 +1,28 @@
 # Compilador MIPS
 
-Pré-processador e analisador léxico para um subconjunto do Assembly MIPS
-(sintaxe do simulador MARS), escritos em Linguagem C.
+Pré-processador, analisador léxico e analisador sintático para um subconjunto do
+Assembly MIPS (sintaxe do simulador MARS), escritos em linguagem C.
 
 ## Estrutura
 
 ```text
 Compilador-MIPS/
 ├── README.md
-├── include/
-│   ├── preprocessador.h            interface do pré-processador (PreProcessamento)
-│   └── lexico.h                    interface do léxico (AnaliseLexica, ProximoToken, Token, Simbolo)
-├── src/
-│   ├── main.c                      argumentos, abertura/fechamento de arquivos e chamada das etapas
-│   ├── preprocessador.c            remoção de comentários e normalização do texto
-│   └── lexico.c                    AFD, Tabela de Símbolos e registro de erros
+├── main.c                          argumentos, abertura/fechamento de arquivos e chamada das etapas
+├── preprocessador.c / .h           remoção de comentários, normalização do texto e mapa de posições
+├── lexico.c / .h                   AFD, Tabela de Símbolos e registro de erros léxicos
+├── sintatico.c / .h                análise descendente recursiva, recuperação de erros e árvore DOT
 ├── docs/
-│   ├── afd.dot                     diagrama do AFD (Graphviz)
-│   ├── afd.png / afd.svg           diagrama renderizado
-│   ├── Relatorio_Compilador.pdf    explica como o código funciona
+│   ├── afd.dot / afd.png / afd.svg diagrama do AFD (Graphviz)
+│   ├── Relatorio_Compilador.pdf    relatório do pré-processador e do léxico
+│   └── Relatorio_Analise_Sintatica.pdf  relatório da análise sintática
 └── tests/
-    ├── entradas/                   programas .asm de teste
-    ├── saidas/                     saídas (.pre, .lex, .ts, .err) de cada teste
+    ├── entradas/                   programas .asm de teste do léxico
     ├── test_preprocessador.c       testes unitários do pré-processador
+    └── sintatico/
+        ├── entradas/               programas .asm de teste do sintático
+        ├── saidas/                 saídas de cada teste (.pre, .lex, .ts, .lex.err, .sin.err, .dot, .png)
+        └── executar_testes.sh      executa todos os testes e confere o código de saída
 ```
 
 ## Compilar
@@ -30,38 +30,45 @@ Compilador-MIPS/
 A partir da raiz do projeto:
 
 ```bash
-gcc -std=c99 -src/main.c src/preprocessador.c src/lexico.c -Iinclude -o main.exe
+gcc main.c preprocessador.c lexico.c sintatico.c -o main.exe
 ```
 
 ## Executar
 
-Com dois argumentos (formato do enunciado da análise léxica):
-
 ```bash
-./main.exe tests\entradas\correto1.asm tests\saidas\correto1.lex
+./main.exe <arquivo_entrada.asm> <prefixo_saida>
+./main.exe teste.asm resultado
 ```
 
-Com três argumentos (informando também o arquivo pré-processado):
-
-```bash
-./main.exe tests\entradas\correto1.asm tests\saidas\correto1.pre tests\saidas\correto1.lex
-```
-
-Nos dois casos são gerados, ao lado do `.lex`:
+São gerados, a partir do prefixo:
 
 | Arquivo | Conteúdo |
 | --- | --- |
-| `.pre` | programa normalizado pelo pré-processador |
-| `.lex` | um token por linha: `<NOME, lexema> linha coluna` |
-| `.ts`  | Tabela de Símbolos em CSV: `LEXEMA,CATEGORIA,LINHA,COLUNA` |
-| `.err` | erros léxicos: `<TIPO, lexema> linha coluna`, ou `Nenhum erro léxico encontrado.` |
+| `resultado.pre` | programa normalizado pelo pré-processador |
+| `resultado.lex` | um token por linha: `<NOME, lexema> linha coluna` |
+| `resultado.ts` | Tabela de Símbolos em CSV: `LEXEMA,CATEGORIA,LINHA,COLUNA` |
+| `resultado.lex.err` | erros léxicos, ou `Nenhum erro léxico encontrado.` |
+| `resultado.sin.err` | erros sintáticos, `Nenhum erro sintático encontrado.` ou o motivo da não execução |
+| `resultado.dot` | árvore sintática concreta (vazio se o programa for inválido) |
 
-Linha e coluna se referem ao arquivo `.pre`, que é a entrada do analisador léxico.
-O programa devolve código 0 em caso de sucesso e 1 se houver erro de argumentos,
-de abertura, leitura, gravação ou fechamento de arquivos.
+Ao final o terminal mostra `PROGRAMA SINTATICAMENTE VÁLIDO`, `PROGRAMA SINTATICAMENTE INVÁLIDO`
+ou `ANÁLISE SINTÁTICA NÃO EXECUTADA: EXISTEM ERROS LÉXICOS.`
 
-## Diagrama do AFD
+Códigos de encerramento: `0` programa válido; `1` rejeição por erros léxicos ou sintáticos;
+`2` falha operacional ou uso incorreto da linha de comando.
+
+Linha e coluna dos diagnósticos sintáticos se referem ao programa original (`.asm`). Os tokens do `.lex` continuam com a posição do `.pre`.
+
+No Windows, para ver os acentos corretamente no terminal, execute antes `chcp 65001`.
+
+## Testes
 
 ```bash
-dot -Tpng docs/afd.dot -o docs/afd.png
+sh tests/sintatico/executar_testes.sh
+```
+
+## Renderizar a árvore sintática
+
+```bash
+dot -Tpng resultado.dot -o resultado.png
 ```

@@ -1,0 +1,10 @@
+.data
+valor: .word 5
+li $t0, 1
+x: add $t0, $t1, $t2
+.text
+main:
+.word 5
+msg: .asciiz "oi"
+li $v0, 10
+syscall
