@@ -59,7 +59,7 @@ Códigos de encerramento: `0` programa válido; `1` rejeição por erros léxico
 
 Linha e coluna dos diagnósticos sintáticos se referem ao programa original (`.asm`). Os tokens do `.lex` continuam com a posição do `.pre`.
 
-No Windows, para ver os acentos corretamente no terminal, execute antes `chcp 65001`.
+No Windows, `main()` configura o console para UTF-8 durante a execução, para que as mensagens com acento apareçam corretamente.
 
 ## Testes
 

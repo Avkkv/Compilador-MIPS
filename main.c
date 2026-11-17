@@ -13,7 +13,12 @@
         2  falha operacional ou uso incorreto da linha de comando. */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "preprocessador.h"
 #include "lexico.h"
@@ -73,6 +78,22 @@ static int gravar_mensagem(const char *nome, const char *mensagem) {
     return fechar(f, nome);
 }
 
+#ifdef _WIN32
+/*  As mensagens do terminal (ex.: "PROGRAMA SINTATICAMENTE VÁLIDO") estao em UTF-8. O console do Windows usa outra
+    pagina de codigo por padrao e mostraria "VÃLIDO"; por isso a saida do console e trocada para UTF-8 durante a
+    execucao, e a pagina original e restaurada ao terminar. Em outros sistemas nada precisa ser feito. */
+static UINT pagina_original = 0;
+
+static void restaurar_console(void) {
+    if (pagina_original != 0) SetConsoleOutputCP(pagina_original);
+}
+
+static void preparar_console(void) {
+    pagina_original = GetConsoleOutputCP();
+    if (pagina_original != 0 && SetConsoleOutputCP(CP_UTF8)) atexit(restaurar_console);
+}
+#endif
+
 static void uso(const char *programa) {
     fprintf(stderr,
             "Uso: %s <arquivo_entrada.asm> <prefixo_saida>\n"
@@ -101,6 +122,10 @@ int main(int argc, char *argv[]) {
     FILE *dot;
 
     int ok, i, resultado;
+
+#ifdef _WIN32
+    preparar_console();
+#endif
 
     if (argc != 3) {
         fprintf(stderr, "Erro: quantidade de argumentos invalida.\n");
